@@ -1,0 +1,113 @@
+{% if grains['cloud'] is defined and grains['cloud'] == 'azure' -%}
+  {% set api_servers = "--master=http://" + ips[0][0] + ":7080" -%}
+  {% set kubeconfig = "" -%}
+{% else -%}
+  {% set kubeconfig = "--kubeconfig=/var/lib/kube-proxy/kubeconfig" -%}
+  {% if grains.api_servers is defined -%}
+    {% set api_servers = "--master=https://" + grains.api_servers -%}
+  {% else -%}
+    {% set ips = salt['mine.get']('roles:kubernetes-master', 'network.ip_addrs', 'grain').values() -%}
+    {% set api_servers = "--master=https://" + ips[0][0] -%}
+  {% endif -%}
+{% endif -%}
+
+{
+"apiVersion": "v1beta3",
+"kind": "Pod",
+"metadata": {"name":"kube-proxy"},
+"spec":{
+"hostNetwork": true,
+"containers":[
+    {
+    "name": "kube-proxy",
+    "image": "artfulcoder/kube-proxy:27a80af09c6667ca4804ddc7eb42679e",
+    "privileged": true,
+    "command": [
+                 "/bin/sh",
+      	         "-c",
+                 "/usr/local/bin/kube-proxy {{api_servers}} {{kubeconfig}} {{pillar['log_level']}} 1>>/var/log/kube-proxy.log 2>&1"
+               ],
+    "volumeMounts": [
+        { "name": "kubeproxylog",
+        "mountPath": "/var/log/kube-proxy.log",
+        "readOnly": false},
+        { "name": "kubeproxyconfig",
+        "mountPath": "/var/lib/kube-proxy/kubeconfig",
+        "readOnly": true},
+	{ "name": "srvkube",
+        "mountPath": "/srv/kubernetes",
+        "readOnly": true},
+        { "name": "etcssl",
+        "mountPath": "/etc/ssl",
+        "readOnly": true},
+        { "name": "usrsharessl",
+        "mountPath": "/usr/share/ssl",
+        "readOnly": true},
+        { "name": "varssl",
+        "mountPath": "/var/ssl",
+        "readOnly": true},
+        { "name": "usrssl",
+        "mountPath": "/usr/ssl",
+        "readOnly": true},
+        { "name": "usrlibssl",
+        "mountPath": "/usr/lib/ssl",
+        "readOnly": true},
+        { "name": "usrlocalopenssl",
+        "mountPath": "/usr/local/openssl",
+        "readOnly": true},
+        { "name": "etcopenssl",
+        "mountPath": "/etc/openssl",
+        "readOnly": true},
+        { "name": "etcpkitls",
+        "mountPath": "/etc/pki/tls",
+        "readOnly": true}
+      ]
+    }
+],
+"volumes":[
+  { "name": "kubeproxylog",
+    "hostPath": {
+        "path": "/var/log/kube-proxy.log"}
+  },
+  { "name": "kubeproxyconfig",
+    "hostPath": {
+        "path": "/var/lib/kube-proxy/kubeconfig"}
+  },
+  { "name": "srvkube",
+    "hostPath": {
+        "path": "/srv/kubernetes"}
+  },
+  { "name": "etcssl",
+    "hostPath": {
+        "path": "/etc/ssl"}
+  },
+  { "name": "usrsharessl",
+    "hostPath": {
+        "path": "/usr/share/ssl"}
+  },
+  { "name": "varssl",
+    "hostPath": {
+        "path": "/var/ssl"}
+  },
+  { "name": "usrssl",
+    "hostPath": {
+        "path": "/usr/ssl"}
+  },
+  { "name": "usrlibssl",
+    "hostPath": {
+        "path": "/usr/lib/ssl"}
+  },
+  { "name": "usrlocalopenssl",
+    "hostPath": {
+        "path": "/usr/local/openssl"}
+  },
+  { "name": "etcopenssl",
+    "hostPath": {
+        "path": "/etc/openssl"}
+  },
+  { "name": "etcpkitls",
+    "hostPath": {
+        "path": "/etc/pki/tls"}
+  }
+]
+}}

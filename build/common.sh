@@ -97,6 +97,7 @@ readonly KUBE_DOCKER_WRAPPED_BINARIES=(
   kube-apiserver
   kube-controller-manager
   kube-scheduler
+  kube-proxy
 )
 
 # ---------------------------------------------------------------------------
@@ -623,7 +624,12 @@ function kube::release::create_docker_images_for_server() {
         rm -rf ${docker_build_path}
         mkdir -p ${docker_build_path}
         ln $1/${binary_name} ${docker_build_path}/${binary_name}
-        printf " FROM busybox \n ADD ${binary_name} /usr/local/bin/${binary_name}\n" > ${docker_file_path}
+
+        if [ ${binary_name} == 'kube-proxy' ]; then
+         printf " FROM ubuntu \n ADD ${binary_name} /usr/local/bin/${binary_name}\n RUN apt-get install -y iptables \n" > ${docker_file_path};
+        else
+          printf " FROM busybox \n ADD ${binary_name} /usr/local/bin/${binary_name}\n" > ${docker_file_path}
+        fi;
 
         local docker_image_tag=gcr.io/google_containers/$binary_name:$md5_sum
         docker build -q -t "${docker_image_tag}" ${docker_build_path} >/dev/null

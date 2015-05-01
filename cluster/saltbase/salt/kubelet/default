@@ -40,4 +40,4 @@
   {% set docker_root = " --docker_root=" + grains.docker_root -%}
 {% endif -%}
 
-DAEMON_ARGS="{{daemon_args}} {{api_servers_with_port}} {{hostname_override}} {{config}} --allow_privileged={{pillar['allow_privileged']}} {{pillar['log_level']}} {{cluster_dns}} {{cluster_domain}} {{docker_root}}"
+DAEMON_ARGS="{{daemon_args}} {{api_servers_with_port}} {{hostname_override}} {{config}} --allow_privileged=true {{pillar['log_level']}} {{cluster_dns}} {{cluster_domain}} {{docker_root}}"
