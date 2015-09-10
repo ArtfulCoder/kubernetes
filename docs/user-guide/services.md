@@ -433,6 +433,7 @@ information about the provisioned balancer will be published in the `Service`'s
             }
         ],
         "clusterIP": "10.0.171.239",
+        "loadBalancerIP": "78.11.24.19"
         "type": "LoadBalancer"
     },
     "status": {
@@ -449,6 +450,7 @@ information about the provisioned balancer will be published in the `Service`'s
 
 Traffic from the external load balancer will be directed at the backend `Pods`,
 though exactly how that works depends on the cloud provider.
+Some cloud providers allows the load-balancer-ip to be specified. In those cases, the load-balancer will be created with the user-specified load-balancer-ip. If the "loadBalancerIP" field is not specified, an ephemeral IP will be assigned to the loadBalancer.
 
 ## Shortcomings
 
