@@ -365,6 +365,23 @@ func (ks *kube2sky) mutateEtcdOrDie(mutator func() error) {
 	}
 }
 
+// TODO: this function has to be removed completely
+// It is a hack so that localhost can be resolved by client in case /etc/hosts can't resolve localhost from /etc/hosts
+// because of a docker bug docker/docker#17190
+func (ks *kube2sky) addLocalHostEntry() error {
+	b, err := json.Marshal(getSkyMsg("127.0.0.1", 0))
+	if err != nil {
+		return err
+	}
+	recordValue := string(b)
+	recordKey := buildDNSNameString(ks.domain, "localhost")
+
+	glog.V(2).Infof("Setting localhost DNS record: %v -> %q, with recordKey: %v\n", ks.domain, recordValue, recordKey)
+	if err := ks.writeSkyRecord(recordKey, recordValue); err != nil {
+		return err
+	}
+}
+
 func buildDNSNameString(labels ...string) string {
 	var res string
 	for _, label := range labels {
@@ -580,6 +597,7 @@ func main() {
 		glog.Fatalf("Failed to create a kubernetes client: %v", err)
 	}
 
+	ks.addLocalHostEntry()
 	ks.endpointsStore = watchEndpoints(kubeClient, &ks)
 	ks.servicesStore = watchForServices(kubeClient, &ks)
 	ks.servicesStore = watchPods(kubeClient, &ks)
